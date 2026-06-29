@@ -2,30 +2,7 @@
 
 A [Hermes](https://github.com/NousResearch/hermes-agent) memory provider plugin backed by DCMA.
 
-## Installation
-
-```bash
-pip install hermes-dcma-memory
-```
-
-For development:
-
-```bash
-pip install -e '.[dev]'
-```
-
-## Configuration
-
-Add to your Hermes `config.yaml`:
-
-```yaml
-memory:
-  provider: dcma
-```
-
-## Prerequisites
-
-A DCMA server running at `http://localhost:3030`. DCMA is private and not publicly available.
+Requires a running DCMA instance. DCMA is private and not publicly available.
 
 ## Tools
 
