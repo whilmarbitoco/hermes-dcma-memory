@@ -6,14 +6,7 @@ Requires a running DCMA instance. DCMA is private and not publicly available.
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `dcma_search` | Search stored memory |
-| `dcma_remember` | Store a memory entry |
-| `dcma_ingest` | Process natural language into memory |
-| `dcma_graph` | Relational memory lookup |
-| `dcma_relate` | Connect two memory entries |
-| `dcma_contradictions` | Surface conflicting memory entries |
+The plugin exposes Hermes tools for persistent memory — search, storage, retrieval, and consistency checking. Full tool documentation is available in the plugin source.
 
 ## License
 
