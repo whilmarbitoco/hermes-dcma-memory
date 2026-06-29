@@ -1,0 +1,5 @@
+name: dcma
+version: "1.0.0"
+description: DCMA graph cognition memory provider for Hermes
+hooks:
+  register: hermes_dcma:register

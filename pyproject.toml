@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hermes-dcma-memory"
+version = "1.0.0"
+description = "Hermes memory provider plugin for the DCMA graph cognition engine"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Whilmar Bitoco", email = "whlmrbitoco@gmail.com"}
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hermes_dcma"]
