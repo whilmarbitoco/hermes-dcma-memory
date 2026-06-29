@@ -1,8 +1,14 @@
 # hermes-dcma-memory
 
-A [Hermes](https://github.com/anomalyco/hermes) memory provider plugin that connects to a DCMA graph cognition engine backend. Enables structured entity/relationship memory with contradiction detection, activation spreading, and natural language ingestion.
+A [Hermes](https://github.com/NousResearch/hermes-agent) memory provider plugin that connects to a DCMA graph cognition engine backend.
 
-## Features
+DCMA processes knowledge through a graph cognition pipeline:
+- **Extracts entities and relationships** from text, building a living knowledge graph
+- **Detects contradictions** — when new information conflicts with prior knowledge
+- **Surfaces forgotten connections** relevant to the current context
+- **Enables natural-language ingestion** with automatic entity/relation extraction
+
+This plugin connects Hermes to a DCMA backend, giving agents structured recall with relational reasoning.
 
 - Graph-based memory with entities and typed relationships
 - Full-text search across memory atoms
@@ -34,7 +40,7 @@ memory:
 
 ## Prerequisites
 
-A DCMA server must be running at `http://localhost:3030`. See the [DCMA repository](https://github.com/anomalyco/dcma) for setup instructions.
+A DCMA server must be running at `http://localhost:3030`. DCMA is private and not publicly available.
 
 ## API Reference
 
