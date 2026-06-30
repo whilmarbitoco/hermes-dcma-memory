@@ -71,10 +71,11 @@ class DCMAMemoryProvider(MemoryProvider):
     def prefetch(self, query: str, session_id: str = "") -> str:
         try:
             results = self._client.search(query, limit=5)
-            if not results:
+            atoms = results.get("atoms", []) if isinstance(results, dict) else results
+            if not atoms:
                 return "No relevant memories found."
             lines = []
-            for r in results[:5]:
+            for r in atoms[:5]:
                 name = r.get("name", "unknown")
                 content = r.get("content", "")
                 lines.append(f"- {name}: {content}" if content else f"- {name}")

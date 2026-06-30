@@ -42,7 +42,14 @@ class MockDCMAHandler(BaseHTTPRequestHandler):
                 if q.lower() in a.get("name", "").lower()
                 or q.lower() in a.get("content", "").lower()
             ]
-            self._json_response(results[:limit])
+            self._json_response(
+                {
+                    "atoms": results[:limit],
+                    "relations": [],
+                    "total": len(results),
+                    "method": "activation",
+                }
+            )
 
         elif path == "/graph":
             q = params.get("q", [""])[0]

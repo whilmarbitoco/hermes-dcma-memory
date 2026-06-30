@@ -70,7 +70,13 @@ class DCMAClient:
     def search(
         self, query: str, limit: int = 10
     ) -> list[dict[str, Any]]:
-        return self._request("GET", "/search", params={"q": query, "limit": limit})
+        result = self._request("GET", "/search", params={"q": query, "limit": limit})
+        if isinstance(result, dict):
+            atoms = result.get("atoms", [])
+            return atoms if isinstance(atoms, list) else []
+        if isinstance(result, list):
+            return result
+        return []
 
     def graph(self, query: str) -> dict[str, Any]:
         return self._request("GET", "/graph", params={"q": query})

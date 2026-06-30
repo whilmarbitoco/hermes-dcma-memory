@@ -23,6 +23,13 @@ class TestDCMAClient:
         results = client.search("nonexistent")
         assert results == []
 
+    def test_search_handles_structured_payload(self, mock_server: str) -> None:
+        client = DCMAClient(base_url=mock_server)
+        client.remember("structured_atom", "test", content="structured payload")
+        results = client.search("structured")
+        assert isinstance(results, list)
+        assert results[0]["name"] == "structured_atom"
+
     def test_remember(self, mock_server: str) -> None:
         client = DCMAClient(base_url=mock_server)
         result = client.remember(
