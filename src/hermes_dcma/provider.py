@@ -269,14 +269,6 @@ class DCMAMemoryProvider(MemoryProvider):
                     "required": ["source", "target", "type"],
                 },
             },
-            {
-                "name": "dcma_contradictions",
-                "description": "List detected contradictions in DCMA memory",
-                "parameters": {
-                    "type": "object",
-                    "properties": {},
-                },
-            },
         ]
 
     def handle_tool_call(self, tool_name: str, args: dict[str, Any]) -> Any:
@@ -345,7 +337,7 @@ class DCMAMemoryProvider(MemoryProvider):
                     type=args["type"],
                 ))
             elif tool_name == "dcma_contradictions":
-                return _textify(self._client.get_contradictions())
+                return "contradictions: unsupported"
             else:
                 raise ValueError(f"Unknown tool: {tool_name}")
         except Exception as e:

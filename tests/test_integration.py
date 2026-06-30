@@ -65,9 +65,6 @@ class TestIntegration:
         assert isinstance(r5, str)
         assert "source" in r5
 
-        r6 = provider.handle_tool_call("dcma_contradictions", {})
-        assert isinstance(r6, str)
-
         provider.shutdown()
 
     def test_register_function(self) -> None:

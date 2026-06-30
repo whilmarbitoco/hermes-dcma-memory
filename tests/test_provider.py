@@ -60,7 +60,6 @@ class TestDCMAMemoryProvider:
             "dcma_ingest",
             "dcma_graph",
             "dcma_relate",
-            "dcma_contradictions",
         }
         assert names == expected
 
@@ -94,11 +93,6 @@ class TestDCMAMemoryProvider:
         )
         assert isinstance(result, str)
         assert "source" in result
-
-    def test_handle_tool_call_contradictions(self, provider: DCMAMemoryProvider) -> None:
-        result = provider.handle_tool_call("dcma_contradictions", {})
-        assert isinstance(result, str)
-        assert "No results" in result or result == "OK"
 
     def test_handle_tool_call_unknown(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_unknown", {})
