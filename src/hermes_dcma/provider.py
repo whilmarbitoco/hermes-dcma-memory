@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import threading
@@ -172,6 +173,9 @@ class DCMAMemoryProvider(MemoryProvider):
             for r in atoms[:5]:
                 name = r.get("name", "unknown")
                 content = r.get("content", "")
+                if not isinstance(content, str):
+                    content = json.dumps(content, ensure_ascii=False)
+                content = " ".join(content.split())
                 lines.append(f"- {name}: {content}" if content else f"- {name}")
             return "Relevant memories:\n" + "\n".join(lines)
         except Exception as e:
@@ -277,36 +281,41 @@ class DCMAMemoryProvider(MemoryProvider):
 
     def handle_tool_call(self, tool_name: str, args: dict[str, Any]) -> Any:
         try:
+            def _textify(value: Any) -> str:
+                if isinstance(value, str):
+                    return value
+                return json.dumps(value, ensure_ascii=False, sort_keys=True)
+
             if tool_name == "dcma_search":
-                return self._client.search(args["query"], limit=args.get("limit", 10))
+                return _textify(self._client.search(args["query"], limit=args.get("limit", 10)))
             elif tool_name == "dcma_remember":
                 tags = None
                 if isinstance(args.get("tags"), str):
                     tags = [t.strip() for t in args["tags"].split(",") if t.strip()]
-                return self._client.remember(
+                return _textify(self._client.remember(
                     name=args["name"],
                     type=args["type"],
                     content=args.get("content"),
                     tags=tags,
                     attributes=args.get("attributes"),
-                )
+                ))
             elif tool_name == "dcma_ingest":
-                return self._client.ingest(args["text"])
+                return _textify(self._client.ingest(args["text"]))
             elif tool_name == "dcma_graph":
-                return self._client.graph(args["query"])
+                return _textify(self._client.graph(args["query"]))
             elif tool_name == "dcma_relate":
-                return self._client.relate(
+                return _textify(self._client.relate(
                     source=args["source"],
                     target=args["target"],
                     type=args["type"],
-                )
+                ))
             elif tool_name == "dcma_contradictions":
-                return self._client.get_contradictions()
+                return _textify(self._client.get_contradictions())
             else:
                 raise ValueError(f"Unknown tool: {tool_name}")
         except Exception as e:
             logger.error("Tool call '%s' failed: %s", tool_name, e)
-            return {"error": str(e)}
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     def shutdown(self) -> None:
         logger.info("DCMA provider shut down")

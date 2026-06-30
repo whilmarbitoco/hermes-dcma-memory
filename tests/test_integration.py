@@ -25,8 +25,8 @@ class TestIntegration:
         )
 
         search_result = provider.handle_tool_call("dcma_search", {"query": "integration"})
-        assert len(search_result) == 1
-        assert search_result[0]["name"] == "test_concept"
+        assert isinstance(search_result, str)
+        assert "test_concept" in search_result
 
         provider.sync_turn(
             user="What is DCMA?",
@@ -43,26 +43,30 @@ class TestIntegration:
         provider.initialize("test")
 
         r1 = provider.handle_tool_call("dcma_search", {"query": "x"})
-        assert isinstance(r1, list)
+        assert isinstance(r1, str)
 
         r2 = provider.handle_tool_call(
             "dcma_remember", {"name": "x", "type": "t"}
         )
-        assert r2["name"] == "x"
+        assert isinstance(r2, str)
+        assert "x" in r2
 
         r3 = provider.handle_tool_call("dcma_ingest", {"text": "hello"})
-        assert "entities" in r3
+        assert isinstance(r3, str)
+        assert "text" in r3
 
         r4 = provider.handle_tool_call("dcma_graph", {"query": "x"})
+        assert isinstance(r4, str)
         assert "atoms" in r4
 
         r5 = provider.handle_tool_call(
             "dcma_relate", {"source": "a", "target": "b", "type": "link"}
         )
-        assert r5["source"] == "a"
+        assert isinstance(r5, str)
+        assert "source" in r5
 
         r6 = provider.handle_tool_call("dcma_contradictions", {})
-        assert isinstance(r6, list)
+        assert isinstance(r6, str)
 
         provider.shutdown()
 

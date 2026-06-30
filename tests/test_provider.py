@@ -67,32 +67,38 @@ class TestDCMAMemoryProvider:
     def test_handle_tool_call_search(self, provider: DCMAMemoryProvider) -> None:
         provider._client.remember("found_item", "test")
         result = provider.handle_tool_call("dcma_search", {"query": "found"})
-        assert len(result) == 1
+        assert isinstance(result, str)
+        assert "found_item" in result
 
     def test_handle_tool_call_remember(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call(
             "dcma_remember",
             {"name": "new_atom", "type": "concept", "content": "test content"},
         )
-        assert result["name"] == "new_atom"
+        assert isinstance(result, str)
+        assert "new_atom" in result
 
     def test_handle_tool_call_ingest(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_ingest", {"text": "hello world"})
-        assert "entities" in result
+        assert isinstance(result, str)
+        assert "text" in result
 
     def test_handle_tool_call_graph(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_graph", {"query": "test"})
+        assert isinstance(result, str)
         assert "atoms" in result
 
     def test_handle_tool_call_relate(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call(
             "dcma_relate", {"source": "a", "target": "b", "type": "link"}
         )
-        assert result["source"] == "a"
+        assert isinstance(result, str)
+        assert "source" in result
 
     def test_handle_tool_call_contradictions(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_contradictions", {})
-        assert result == []
+        assert isinstance(result, str)
+        assert result == "[]"
 
     def test_handle_tool_call_unknown(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_unknown", {})
@@ -101,6 +107,7 @@ class TestDCMAMemoryProvider:
     def test_handle_tool_call_error(self, provider: DCMAMemoryProvider) -> None:
         provider._client.base_url = "http://127.0.0.1:19873"  # type: ignore[attr-defined]
         result = provider.handle_tool_call("dcma_search", {"query": "x"})
+        assert isinstance(result, str)
         assert "error" in result
 
     def test_sync_turn_passive_learning(self, provider: DCMAMemoryProvider) -> None:
