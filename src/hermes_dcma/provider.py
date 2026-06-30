@@ -1,4 +1,5 @@
 import logging
+import re
 import threading
 from typing import Any, ClassVar
 
@@ -41,6 +42,98 @@ logger = logging.getLogger(__name__)
 
 AVAILABILITY_CACHE_SECONDS = 30
 
+_TURN_PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
+    (
+        "preference",
+        "positive",
+        re.compile(
+            r"\bI\s+(?:really\s+)?(?:like|love|prefer|enjoy|use)\s+(?P<object>[^.!?\n]+)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "preference",
+        "negative",
+        re.compile(
+            r"\bI\s+(?:do\s+not|don't|dont|dislike|hate|avoid)\s+(?:like\s+)?(?P<object>[^.!?\n]+)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "identity",
+        "name",
+        re.compile(r"\bmy\s+name\s+is\s+(?P<object>[^.!?\n]+)", re.IGNORECASE),
+    ),
+    (
+        "identity",
+        "location",
+        re.compile(r"\bI\s+live\s+in\s+(?P<object>[^.!?\n]+)", re.IGNORECASE),
+    ),
+    (
+        "commitment",
+        "assistant",
+        re.compile(r"\bI\s+(?:will|'ll|can|should)\s+(?P<object>[^.!?\n]+)", re.IGNORECASE),
+    ),
+]
+
+
+def _slugify(text: str) -> str:
+    value = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return value or "item"
+
+
+def _clean_phrase(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip(" ,;:.!?\"'")
+
+
+def _candidate_name(kind: str, subject: str, value: str) -> str:
+    return f"passive-{kind}-{_slugify(subject)}-{_slugify(value)[:48]}"
+
+
+def _extract_candidates(user: str, assistant: str, session_id: str) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+
+    def _scan(text: str, source: str) -> None:
+        for kind, subject, pattern in _TURN_PATTERNS:
+            for match in pattern.finditer(text):
+                value = _clean_phrase(match.group("object"))
+                if not value:
+                    continue
+                if kind == "commitment" and source != "assistant":
+                    continue
+                if kind in {"preference", "identity"} and source != "user":
+                    continue
+                name = _candidate_name(kind, subject, value)
+                content = f"{source} {kind}: {value}"
+                confidence = 0.9 if kind in {"identity", "preference"} else 0.75
+                candidates.append(
+                    {
+                        "name": name,
+                        "type": kind.title(),
+                        "content": content,
+                        "tags": ["passive", kind, source],
+                        "attributes": {
+                            "source": source,
+                            "session_id": session_id,
+                            "confidence": confidence,
+                            "evidence": value,
+                        },
+                    }
+                )
+
+    _scan(user, "user")
+    _scan(assistant, "assistant")
+
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = candidate["name"]
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(candidate)
+    return deduped
+
 
 class DCMAMemoryProvider(MemoryProvider):
     name: ClassVar[str] = "dcma"
@@ -49,6 +142,7 @@ class DCMAMemoryProvider(MemoryProvider):
         self._client = DCMAClient()
         self._session_id: str | None = None
         self._available: bool | None = None
+        self._learned_memory_keys: set[str] = set()
 
     def is_available(self) -> bool:
         if self._available is None:
@@ -85,12 +179,24 @@ class DCMAMemoryProvider(MemoryProvider):
             return ""
 
     def sync_turn(self, user: str, assistant: str, session_id: str = "") -> None:
+        session_key = session_id or self._session_id or "session"
+
         def _ingest() -> None:
             try:
-                text = f"User: {user}\nAssistant: {assistant}"
-                self._client.ingest(text)
+                for candidate in _extract_candidates(user, assistant, session_key):
+                    key = candidate["name"]
+                    if key in self._learned_memory_keys:
+                        continue
+                    self._client.remember(
+                        name=candidate["name"],
+                        type=candidate["type"],
+                        content=candidate["content"],
+                        tags=candidate["tags"],
+                        attributes=candidate["attributes"],
+                    )
+                    self._learned_memory_keys.add(key)
             except Exception as e:
-                logger.debug("Ingest on sync_turn failed: %s", e)
+                logger.debug("Passive learning on sync_turn failed: %s", e)
 
         thread = threading.Thread(target=_ingest, daemon=True)
         thread.start()

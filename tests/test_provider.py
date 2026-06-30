@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from unittest.mock import patch
 
 import pytest
@@ -101,6 +102,22 @@ class TestDCMAMemoryProvider:
         provider._client.base_url = "http://127.0.0.1:19873"  # type: ignore[attr-defined]
         result = provider.handle_tool_call("dcma_search", {"query": "x"})
         assert "error" in result
+
+    def test_sync_turn_passive_learning(self, provider: DCMAMemoryProvider) -> None:
+        provider.initialize("session-passive")
+        provider.sync_turn(
+            user="I prefer dark backgrounds.",
+            assistant="Noted.",
+            session_id="session-passive",
+        )
+        time.sleep(0.1)
+
+        atoms = provider._client.list_atoms()  # type: ignore[attr-defined]
+        assert any(
+            atom["name"].startswith("passive-preference")
+            and "dark backgrounds" in atom.get("content", "")
+            for atom in atoms
+        )
 
     def test_shutdown(self, provider: DCMAMemoryProvider) -> None:
         provider.shutdown()
