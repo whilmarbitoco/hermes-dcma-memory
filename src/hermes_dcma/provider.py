@@ -283,8 +283,43 @@ class DCMAMemoryProvider(MemoryProvider):
         try:
             def _textify(value: Any) -> str:
                 if isinstance(value, str):
-                    return value
-                return json.dumps(value, ensure_ascii=False, sort_keys=True)
+                    return " ".join(value.split())
+                if isinstance(value, list):
+                    lines: list[str] = []
+                    for item in value[:10]:
+                        if isinstance(item, dict):
+                            name = item.get("name") or item.get("id") or "item"
+                            content = item.get("content", "")
+                            if not isinstance(content, str):
+                                content = str(content)
+                            content = " ".join(content.split())
+                            lines.append(f"- {name}: {content}" if content else f"- {name}")
+                        else:
+                            lines.append(f"- {str(item)}")
+                    return "\n".join(lines) if lines else "No results."
+                if isinstance(value, dict):
+                    parts: list[str] = []
+                    for key in ("name", "type", "id", "source", "target", "status", "message", "error", "query", "method", "total", "text"):
+                        if key in value and value[key] is not None:
+                            parts.append(f"{key}: {value[key]}")
+                    if "atoms" in value and isinstance(value["atoms"], list):
+                        atoms = value["atoms"][:5]
+                        parts.append(f"atoms: {len(value['atoms'])}")
+                        for atom in atoms:
+                            if isinstance(atom, dict):
+                                name = atom.get("name", "item")
+                                content = atom.get("content", "")
+                                if not isinstance(content, str):
+                                    content = str(content)
+                                content = " ".join(content.split())
+                                parts.append(f"- {name}: {content}" if content else f"- {name}")
+                    if "relations" in value and isinstance(value["relations"], list):
+                        parts.append(f"relations: {len(value['relations'])}")
+                    for key in ("content", "tags", "attributes"):
+                        if key in value and value[key] not in (None, "", [], {}):
+                            parts.append(f"{key}: {value[key]}")
+                    return "\n".join(parts) if parts else "OK"
+                return str(value)
 
             if tool_name == "dcma_search":
                 return _textify(self._client.search(args["query"], limit=args.get("limit", 10)))
@@ -315,7 +350,7 @@ class DCMAMemoryProvider(MemoryProvider):
                 raise ValueError(f"Unknown tool: {tool_name}")
         except Exception as e:
             logger.error("Tool call '%s' failed: %s", tool_name, e)
-            return json.dumps({"error": str(e)}, ensure_ascii=False)
+            return f"error: {e}"
 
     def shutdown(self) -> None:
         logger.info("DCMA provider shut down")

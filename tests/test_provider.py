@@ -98,7 +98,7 @@ class TestDCMAMemoryProvider:
     def test_handle_tool_call_contradictions(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_contradictions", {})
         assert isinstance(result, str)
-        assert result == "[]"
+        assert "No results" in result or result == "OK"
 
     def test_handle_tool_call_unknown(self, provider: DCMAMemoryProvider) -> None:
         result = provider.handle_tool_call("dcma_unknown", {})
