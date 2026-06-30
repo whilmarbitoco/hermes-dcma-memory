@@ -104,7 +104,7 @@ class DCMAClient:
         return self._request(
             "POST",
             "/relations",
-            data={"source": source, "target": target, "type": type},
+            data={"src": source, "dst": target, "type": type},
         )
 
     def ingest(self, text: str) -> dict[str, Any]:
@@ -117,4 +117,12 @@ class DCMAClient:
         return self._request("GET", "/atoms", params={"limit": limit})
 
     def get_contradictions(self) -> list[dict[str, Any]]:
-        return self._request("GET", "/contradictions")
+        try:
+            result = self._request("GET", "/contradictions")
+        except DCMAError as e:
+            if e.status_code == 404:
+                return []
+            raise
+        if isinstance(result, list):
+            return result
+        return []

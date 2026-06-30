@@ -87,8 +87,10 @@ class MockDCMAHandler(BaseHTTPRequestHandler):
 
         elif path == "/relations":
             rel = {
-                "source": body.get("source"),
-                "target": body.get("target"),
+                "source": body.get("source", body.get("src")),
+                "target": body.get("target", body.get("dst")),
+                "src": body.get("src", body.get("source")),
+                "dst": body.get("dst", body.get("target")),
                 "type": body.get("type"),
             }
             self.relations.append(rel)
